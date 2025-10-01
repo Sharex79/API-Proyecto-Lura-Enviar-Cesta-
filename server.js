@@ -5,7 +5,14 @@ import pkg from "pg";
 const { Pool } = pkg;
 
 const app = express();
-app.use(cors());
+
+// CORS configurado correctamente
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://tu-dominio-vercel.app', '*'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 // Configuración conexión DB
@@ -52,4 +59,5 @@ app.post("/api/crear_cesta", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => console.log(`API escuchando en puerto ${PORT}`));
