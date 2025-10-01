@@ -3,19 +3,32 @@ import cors from "cors";
 import pkg from "pg";
 
 const { Pool } = pkg;
-
 const app = express();
 
-// CORS configurado correctamente
+// CORS configurado correctamente - IMPORTANTE
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://tu-dominio-vercel.app', '*'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: '*', // Permite todos los orígenes temporalmente
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
 }));
+
+// O si el anterior no funciona, usa este:
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 app.use(express.json());
 
-// Configuración conexión DB
+// Configuración de la base de datos
 const pool = new Pool({
   host: "switchback.proxy.rlwy.net",
   port: 15893,
@@ -34,7 +47,6 @@ app.post("/api/crear_cesta", async (req, res) => {
 
     const resultados = [];
 
-    // Insertar cada producto en la tabla
     for (const producto of productos) {
       const { id_producto, cantidad_producto } = producto;
       
@@ -59,5 +71,4 @@ app.post("/api/crear_cesta", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => console.log(`API escuchando en puerto ${PORT}`));
