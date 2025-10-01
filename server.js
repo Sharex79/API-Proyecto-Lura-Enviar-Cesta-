@@ -13,7 +13,7 @@ app.use(cors({
   credentials: false
 }));
 
-// O si el anterior no funciona, usa este:
+// Headers CORS adicionales por si acaso
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Configuración de la base de datos
+// Configuración conexión DB
 const pool = new Pool({
   host: "switchback.proxy.rlwy.net",
   port: 15893,
@@ -47,6 +47,7 @@ app.post("/api/crear_cesta", async (req, res) => {
 
     const resultados = [];
 
+    // Insertar cada producto en la tabla
     for (const producto of productos) {
       const { id_producto, cantidad_producto } = producto;
       
@@ -70,5 +71,13 @@ app.post("/api/crear_cesta", async (req, res) => {
   }
 });
 
+// Endpoint de test para verificar CORS
+app.get("/api/test-cors", (req, res) => {
+  res.json({ message: "CORS funciona correctamente", timestamp: new Date() });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`API escuchando en puerto ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`API escuchando en puerto ${PORT}`);
+  console.log(`Test CORS: https://api-proyecto-lura-enviar-cesta-production.up.railway.app/api/test-cors`);
+});
