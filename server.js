@@ -23,8 +23,8 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Endpoint corregido con el nombre correcto de la tabla
-app.post("/api/cestas_productos", async (req, res) => {
+// CAMBIAR EL ENDPOINT A /api/crear_cesta
+app.post("/api/crear_cesta", async (req, res) => {
   try {
     console.log("Datos recibidos:", req.body);
     
@@ -34,7 +34,7 @@ app.post("/api/cestas_productos", async (req, res) => {
     for (const producto of productos) {
       const { id_producto, cantidad_producto } = producto;
       
-      // CAMBIAR AQUÍ: cestas_productos (con S)
+      // La tabla sí se llama cestas_productos
       const result = await pool.query(
         `INSERT INTO cestas_productos (numero_cesta, id_producto, cantidad_producto)
          VALUES ($1, $2, $3) RETURNING *`,
@@ -57,6 +57,4 @@ app.post("/api/cestas_productos", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API escuchando en puerto ${PORT}`));
-
-
 
