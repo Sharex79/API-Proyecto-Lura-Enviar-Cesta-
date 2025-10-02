@@ -24,7 +24,7 @@ const pool = new Pool({
 });
 
 // Endpoint corregido con el nombre correcto de la tabla
-app.post("/api/crear_cesta", async (req, res) => {
+app.post("/api/cestas_productos", async (req, res) => {
   try {
     console.log("Datos recibidos:", req.body);
     
@@ -57,5 +57,6 @@ app.post("/api/crear_cesta", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API escuchando en puerto ${PORT}`));
+
 
 
