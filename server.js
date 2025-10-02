@@ -52,7 +52,7 @@ app.post("/api/crear_cesta", async (req, res) => {
       const { id_producto, cantidad_producto } = producto;
       
       const result = await pool.query(
-        `INSERT INTO cesta_producto (numero_cesta, id_producto, cantidad_producto)
+        `INSERT INTO cestas_productos (numero_cesta, id_producto, cantidad_producto)
          VALUES ($1, $2, $3) RETURNING *`,
         [numero_cesta, id_producto, cantidad_producto]
       );
@@ -81,3 +81,4 @@ app.listen(PORT, () => {
   console.log(`API escuchando en puerto ${PORT}`);
   console.log(`Test CORS: https://api-proyecto-lura-enviar-cesta-production.up.railway.app/api/test-cors`);
 });
+
