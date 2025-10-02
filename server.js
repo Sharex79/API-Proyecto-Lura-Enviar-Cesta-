@@ -1,20 +1,44 @@
+import express from "express";
+import cors from "cors";
+import pkg from "pg";
+
+const { Pool } = pkg;
+const app = express();
+
+// CORS configurado
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
+
+app.use(express.json());
+
+// Configuración de base de datos
+const pool = new Pool({
+  host: "switchback.proxy.rlwy.net",
+  port: 15893,
+  database: "railway",
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  ssl: { rejectUnauthorized: false }
+});
+
+// Endpoint principal
 app.post("/api/cestas_productos", async (req, res) => {
   try {
     console.log("Datos recibidos:", req.body);
     
     const { numero_cesta, productos } = req.body;
     
-    // AGREGAR VALIDACIÓN
+    // Validación
     if (!numero_cesta) {
       return res.status(400).json({ ok: false, error: "numero_cesta es requerido" });
     }
     
     if (!productos || !Array.isArray(productos)) {
       return res.status(400).json({ ok: false, error: "productos debe ser un array" });
-    }
-    
-    if (productos.length === 0) {
-      return res.status(400).json({ ok: false, error: "productos no puede estar vacío" });
     }
 
     const resultados = [];
@@ -33,11 +57,23 @@ app.post("/api/cestas_productos", async (req, res) => {
 
     res.json({ 
       ok: true, 
-      productos_guardados: resultados.length
+      productos_guardados: resultados.length,
+      datos: resultados
     });
 
   } catch (err) {
     console.error("Error completo:", err);
     res.status(500).json({ ok: false, error: err.message });
   }
+});
+
+// Endpoint de test
+app.get("/", (req, res) => {
+  res.json({ message: "API funcionando", timestamp: new Date() });
+});
+
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`API escuchando en puerto ${PORT}`);
 });
