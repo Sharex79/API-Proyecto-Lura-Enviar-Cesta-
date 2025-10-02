@@ -41,5 +41,3 @@ app.post("/api/cestas_productos", async (req, res) => {
     res.status(500).json({ ok: false, error: err.message });
   }
 });
-
-
