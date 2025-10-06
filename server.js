@@ -5,7 +5,6 @@ import pkg from "pg";
 const { Pool } = pkg;
 const app = express();
 
-// CORS configurado
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -15,7 +14,6 @@ app.use(cors({
 
 app.use(express.json());
 
-// Configuración de base de datos
 const pool = new Pool({
   host: "switchback.proxy.rlwy.net",
   port: 15893,
@@ -25,14 +23,14 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Endpoint principal
+// ENDPOINT CON SOBRESCRITURA
 app.post("/api/cestas_productos", async (req, res) => {
   try {
-    console.log("Datos recibidos:", req.body);
+    console.log("=== DATOS RECIBIDOS ===");
+    console.log("req.body:", req.body);
     
     const { numero_cesta, productos } = req.body;
     
-    // Validación
     if (!numero_cesta) {
       return res.status(400).json({ ok: false, error: "numero_cesta es requerido" });
     }
@@ -41,6 +39,15 @@ app.post("/api/cestas_productos", async (req, res) => {
       return res.status(400).json({ ok: false, error: "productos debe ser un array" });
     }
 
+    // 🔥 PASO 1: ELIMINAR TODO LO ANTERIOR DE ESA CESTA
+    const deleteResult = await pool.query(
+      'DELETE FROM cestas_productos WHERE numero_cesta = $1',
+      [numero_cesta]
+    );
+    
+    console.log(`Eliminados ${deleteResult.rowCount} productos de la cesta ${numero_cesta}`);
+
+    // 🔥 PASO 2: INSERTAR LOS NUEVOS PRODUCTOS
     const resultados = [];
 
     for (const producto of productos) {
@@ -55,25 +62,28 @@ app.post("/api/cestas_productos", async (req, res) => {
       resultados.push(result.rows[0]);
     }
 
+    console.log(`Insertados ${resultados.length} productos nuevos`);
+
     res.json({ 
       ok: true, 
+      productos_eliminados: deleteResult.rowCount,
       productos_guardados: resultados.length,
-      datos: resultados
+      mensaje: `Cesta ${numero_cesta} sobrescrita: ${deleteResult.rowCount} eliminados, ${resultados.length} nuevos`
     });
 
   } catch (err) {
-    console.error("Error completo:", err);
+    console.error("Error:", err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
 
-// Endpoint de test
 app.get("/", (req, res) => {
-  res.json({ message: "API funcionando", timestamp: new Date() });
+  res.json({ message: "API funcionando con sobrescritura", timestamp: new Date() });
 });
 
-// Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`API escuchando en puerto ${PORT}`);
 });
+});
+
