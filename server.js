@@ -69,50 +69,25 @@ app.post("/api/cestas_productos", async (req, res) => {
     
     console.log(`✅ Eliminados ${deleteResult.rowCount} productos anteriores de la cesta ${numero_cesta}`);
 
-    // 🔥 PASO 1.5: INSERTAR/ACTUALIZAR LA INFORMACIÓN DE LA CESTA (incluyendo foto)
-    console.log(`Insertando/actualizando información de la cesta ${numero_cesta} con foto...`);
-    
-    // Verificar si la cesta ya existe en la tabla cestas
-    const cestaExistente = await pool.query(
-      'SELECT numero_cesta FROM cestas WHERE numero_cesta = $1',
-      [numero_cesta]
-    );
-
-    if (cestaExistente.rows.length > 0) {
-      // Actualizar cesta existente
-      await pool.query(
-        'UPDATE cestas SET foto = $2 WHERE numero_cesta = $1',
-        [numero_cesta, foto || null]
-      );
-      console.log(`✅ Cesta ${numero_cesta} actualizada con nueva foto`);
-    } else {
-      // Insertar nueva cesta
-      await pool.query(
-        'INSERT INTO cestas (numero_cesta, foto) VALUES ($1, $2)',
-        [numero_cesta, foto || null]
-      );
-      console.log(`✅ Nueva cesta ${numero_cesta} creada con foto`);
-    }
-
-    // 🔥 PASO 2: INSERTAR LOS NUEVOS PRODUCTOS
-    console.log(`Insertando ${productos.length} productos nuevos...`);
+    // 🔥 PASO 2: INSERTAR LOS NUEVOS PRODUCTOS (incluyendo la foto en cada registro)
+    console.log(`Insertando ${productos.length} productos nuevos con foto...`);
     const resultados = [];
 
     for (const producto of productos) {
       const { id_producto, cantidad_producto } = producto;
       
-      console.log(`Insertando producto: ID=${id_producto}, Cantidad=${cantidad_producto}`);
+      console.log(`Insertando producto: ID=${id_producto}, Cantidad=${cantidad_producto}, Foto=${foto || 'sin foto'}`);
       
       const result = await pool.query(
-        `INSERT INTO cestas_productos (numero_cesta, id_producto, cantidad_producto)
-         VALUES ($1, $2, $3) RETURNING *`,
-        [numero_cesta, id_producto, cantidad_producto]
+        `INSERT INTO cestas_productos (numero_cesta, id_producto, cantidad_producto, foto)
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [numero_cesta, id_producto, cantidad_producto, foto || null]
       );
       
       resultados.push(result.rows[0]);
     }
 
-    console.log(`✅ Insertados ${resultados.length} productos nuevos en la cesta ${numero_cesta}`);
+    console.log(`✅ Insertados ${resultados.length} productos nuevos en la cesta ${numero_cesta} con foto`);
 
     // Respuesta exitosa
     const respuesta = {
@@ -120,7 +95,7 @@ app.post("/api/cestas_productos", async (req, res) => {
       productos_eliminados: deleteResult.rowCount,
       productos_guardados: resultados.length,
       foto_guardada: foto || "Sin foto",
-      mensaje: `Cesta ${numero_cesta} sobrescrita correctamente: ${deleteResult.rowCount} eliminados, ${resultados.length} nuevos insertados, foto: ${foto ? 'actualizada' : 'sin foto'}`,
+      mensaje: `Cesta ${numero_cesta} sobrescrita correctamente: ${deleteResult.rowCount} eliminados, ${resultados.length} nuevos insertados con foto: ${foto ? foto : 'sin foto'}`,
       datos: resultados
     };
 
