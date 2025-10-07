@@ -38,6 +38,35 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// ENDPOINT PARA OBTENER CESTAS (GET)
+app.get("/api/cestas_productos", async (req, res) => {
+  try {
+    console.log("=== OBTENIENDO CESTAS DESDE LA BASE DE DATOS ===");
+    
+    const result = await pool.query(
+      `SELECT DISTINCT numero_cesta, foto 
+       FROM cestas_productos 
+       WHERE foto IS NOT NULL AND foto != '' 
+       ORDER BY numero_cesta DESC 
+       LIMIT 1`
+    );
+    
+    console.log(`✅ Encontradas ${result.rows.length} cestas con foto`);
+    
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error("=== ERROR OBTENIENDO CESTAS ===");
+    console.error("Error completo:", err);
+    
+    res.status(500).json({ 
+      ok: false, 
+      error: err.message,
+      details: "Error al obtener cestas de la base de datos"
+    });
+  }
+});
+
 // ENDPOINT PRINCIPAL CON SOBRESCRITURA
 app.post("/api/cestas_productos", async (req, res) => {
   try {
@@ -122,8 +151,8 @@ app.get("/", (req, res) => {
   res.json({ 
     message: "API funcionando correctamente con sobrescritura y gestión de fotos", 
     timestamp: new Date(),
-    endpoints: ["/api/cestas_productos"],
-    features: ["Sobrescritura de cestas", "Gestión de fotos de cestas"]
+    endpoints: ["/api/cestas_productos (GET y POST)"],
+    features: ["Sobrescritura de cestas", "Gestión de fotos de cestas", "Obtención de fotos de cestas"]
   });
 });
 
@@ -144,4 +173,5 @@ app.listen(PORT, () => {
   console.log(`🗃️ Conectado a base de datos PostgreSQL`);
   console.log(`🔄 Funcionalidad de sobrescritura habilitada`);
   console.log(`📸 Gestión de fotos de cestas habilitada`);
+  console.log(`🖼️ Endpoint GET para obtener fotos de cestas habilitado`);
 });
