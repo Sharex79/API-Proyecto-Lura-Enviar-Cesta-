@@ -45,7 +45,7 @@ app.post("/api/cestas_productos", async (req, res) => {
     console.log("req.body completo:", req.body);
     console.log("Headers recibidos:", req.headers);
     
-    const { numero_cesta, productos } = req.body;
+    const { numero_cesta, foto, productos } = req.body;
     
     // Validaciones
     if (!numero_cesta) {
@@ -68,6 +68,31 @@ app.post("/api/cestas_productos", async (req, res) => {
     );
     
     console.log(`✅ Eliminados ${deleteResult.rowCount} productos anteriores de la cesta ${numero_cesta}`);
+
+    // 🔥 PASO 1.5: INSERTAR/ACTUALIZAR LA INFORMACIÓN DE LA CESTA (incluyendo foto)
+    console.log(`Insertando/actualizando información de la cesta ${numero_cesta} con foto...`);
+    
+    // Verificar si la cesta ya existe en la tabla cestas
+    const cestaExistente = await pool.query(
+      'SELECT numero_cesta FROM cestas WHERE numero_cesta = $1',
+      [numero_cesta]
+    );
+
+    if (cestaExistente.rows.length > 0) {
+      // Actualizar cesta existente
+      await pool.query(
+        'UPDATE cestas SET foto = $2 WHERE numero_cesta = $1',
+        [numero_cesta, foto || null]
+      );
+      console.log(`✅ Cesta ${numero_cesta} actualizada con nueva foto`);
+    } else {
+      // Insertar nueva cesta
+      await pool.query(
+        'INSERT INTO cestas (numero_cesta, foto) VALUES ($1, $2)',
+        [numero_cesta, foto || null]
+      );
+      console.log(`✅ Nueva cesta ${numero_cesta} creada con foto`);
+    }
 
     // 🔥 PASO 2: INSERTAR LOS NUEVOS PRODUCTOS
     console.log(`Insertando ${productos.length} productos nuevos...`);
@@ -94,7 +119,8 @@ app.post("/api/cestas_productos", async (req, res) => {
       ok: true,
       productos_eliminados: deleteResult.rowCount,
       productos_guardados: resultados.length,
-      mensaje: `Cesta ${numero_cesta} sobrescrita correctamente: ${deleteResult.rowCount} eliminados, ${resultados.length} nuevos insertados`,
+      foto_guardada: foto || "Sin foto",
+      mensaje: `Cesta ${numero_cesta} sobrescrita correctamente: ${deleteResult.rowCount} eliminados, ${resultados.length} nuevos insertados, foto: ${foto ? 'actualizada' : 'sin foto'}`,
       datos: resultados
     };
 
@@ -119,9 +145,10 @@ app.post("/api/cestas_productos", async (req, res) => {
 // Endpoint de prueba
 app.get("/", (req, res) => {
   res.json({ 
-    message: "API funcionando correctamente con sobrescritura", 
+    message: "API funcionando correctamente con sobrescritura y gestión de fotos", 
     timestamp: new Date(),
-    endpoints: ["/api/cestas_productos"]
+    endpoints: ["/api/cestas_productos"],
+    features: ["Sobrescritura de cestas", "Gestión de fotos de cestas"]
   });
 });
 
@@ -141,4 +168,5 @@ app.listen(PORT, () => {
   console.log(`📡 CORS configurado para todos los orígenes`);
   console.log(`🗃️ Conectado a base de datos PostgreSQL`);
   console.log(`🔄 Funcionalidad de sobrescritura habilitada`);
+  console.log(`📸 Gestión de fotos de cestas habilitada`);
 });
