@@ -103,14 +103,14 @@ app.post("/api/cestas_productos", async (req, res) => {
     const resultados = [];
 
     for (const producto of productos) {
-      const { id_producto, cantidad_producto } = producto;
+      const { id_producto, cantidad_producto, unidad_medida } = producto;
       
-      console.log(`Insertando producto: ID=${id_producto}, Cantidad=${cantidad_producto}, Foto=${foto || 'sin foto'}`);
+      console.log(`Insertando producto: ID=${id_producto}, Cantidad=${cantidad_producto}, Unidad=${unidad_medida || 'kg'}, Foto=${foto || 'sin foto'}`);
       
       const result = await pool.query(
-        `INSERT INTO cestas_productos (numero_cesta, id_producto, cantidad_producto, foto)
-         VALUES ($1, $2, $3, $4) RETURNING *`,
-        [numero_cesta, id_producto, cantidad_producto, foto || null]
+        `INSERT INTO cestas_productos (numero_cesta, id_producto, cantidad_producto, unidad_medida, foto)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [numero_cesta, id_producto, cantidad_producto, unidad_medida || 'kg', foto || null]
       );
       
       resultados.push(result.rows[0]);
